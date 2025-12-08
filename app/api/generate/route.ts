@@ -13,6 +13,11 @@ interface Week {
 }
 
 interface ParsedPlan {
+  overview?: string;
+  duration?: string;
+  timeCommitment?: string;
+  difficultyLevel?: string;
+  whatYoullBuild?: string;
   skills: string[];
   weeks: Week[];
   accessibility: string;
@@ -34,6 +39,11 @@ function parseMarkdownToJSON(md: string): ParsedPlan {
   const lines = cleanMd.split('\n');
   const skills: string[] = [];
   const weeks: Week[] = [];
+  let overview = '';
+  let duration = '';
+  let timeCommitment = '';
+  let difficultyLevel = '';
+  let whatYoullBuild = '';
   let accessibility = '';
   let assessment = '';
   let localization = '';
@@ -50,6 +60,10 @@ function parseMarkdownToJSON(md: string): ParsedPlan {
     if (!trimmed) continue;
     
     // Detect main sections with more flexible patterns
+    if (trimmed.match(/^#{1,4}\s*Overview/i)) {
+      currentSection = 'overview';
+      continue;
+    }
     if (trimmed.match(/^#{1,4}\s*(Top\s*\d*\s*Skills?|Skills?[\s\/]*(Competencies)?|Key\s*Skills?)/i)) {
       currentSection = 'skills';
       continue;
@@ -80,6 +94,38 @@ function parseMarkdownToJSON(md: string): ParsedPlan {
         const skillDesc = skillMatch[2].trim();
         skills.push(`${skillName}: ${skillDesc}`);
         continue;
+      }
+    }
+    
+    // Parse overview section
+    if (currentSection === 'overview') {
+      // Match **Duration:** value
+      const durationMatch = trimmed.match(/^\*\*Duration:\*\*\s*(.+)/i);
+      if (durationMatch) {
+        duration = durationMatch[1].trim();
+        continue;
+      }
+      // Match **Time Commitment:** value
+      const timeMatch = trimmed.match(/^\*\*Time\s*Commitment:\*\*\s*(.+)/i);
+      if (timeMatch) {
+        timeCommitment = timeMatch[1].trim();
+        continue;
+      }
+      // Match **Difficulty Level:** value
+      const difficultyMatch = trimmed.match(/^\*\*Difficulty\s*Level:\*\*\s*(.+)/i);
+      if (difficultyMatch) {
+        difficultyLevel = difficultyMatch[1].trim();
+        continue;
+      }
+      // Match **What You'll Build:** value
+      const buildMatch = trimmed.match(/^\*\*What\s*You'?ll\s*Build:\*\*\s*(.+)/i);
+      if (buildMatch) {
+        whatYoullBuild = buildMatch[1].trim();
+        continue;
+      }
+      // Collect regular text for overview description
+      if (!trimmed.match(/^\*\*/) && !trimmed.match(/^#{1,4}/)) {
+        overview += (overview ? ' ' : '') + trimmed;
       }
     }
     
@@ -197,6 +243,11 @@ function parseMarkdownToJSON(md: string): ParsedPlan {
   });
   
   return {
+    overview: overview.trim(),
+    duration: duration.trim(),
+    timeCommitment: timeCommitment.trim(),
+    difficultyLevel: difficultyLevel.trim(),
+    whatYoullBuild: whatYoullBuild.trim(),
     skills,
     weeks,
     accessibility: accessibility.trim(),

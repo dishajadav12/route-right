@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 export const runtime = 'nodejs';
 
@@ -12,10 +14,16 @@ interface Week {
 }
 
 interface LearningPlan {
+  userId: string;
   role: string;
   goal: string;
   hours: number;
   language: string;
+  overview?: string;
+  duration?: string;
+  timeCommitment?: string;
+  difficultyLevel?: string;
+  whatYoullBuild?: string;
   skills: string[];
   weeks: Week[];
   accessibility: string;
@@ -27,9 +35,18 @@ interface LearningPlan {
 // POST - Create a new plan
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     
-    const { role, goal, hours, language, skills, weeks, accessibility, assessment, localization } = body;
+    const { role, goal, hours, language, overview, duration, timeCommitment, difficultyLevel, whatYoullBuild, skills, weeks, accessibility, assessment, localization } = body;
     
     if (!role || !goal || !weeks || weeks.length === 0) {
       return NextResponse.json(
@@ -43,10 +60,16 @@ export async function POST(req: NextRequest) {
     const collection = db.collection("learning_plans");
 
     const plan: LearningPlan = {
+      userId: session.user.id,
       role,
       goal,
       hours: hours || 4,
       language: language || "English",
+      overview: overview || "",
+      duration: duration || "",
+      timeCommitment: timeCommitment || "",
+      difficultyLevel: difficultyLevel || "",
+      whatYoullBuild: whatYoullBuild || "",
       skills: skills || [],
       weeks,
       accessibility: accessibility || "",
@@ -74,15 +97,24 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET - Fetch all plans or by query
+// GET - Fetch all plans for the logged-in user
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const client = await clientPromise;
     const db = client.db("opensesame");
     const collection = db.collection("learning_plans");
 
     const plans = await collection
-      .find({})
+      .find({ userId: session.user.id })
       .sort({ createdAt: -1 })
       .limit(50)
       .toArray();

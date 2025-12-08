@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../auth/[...nextauth]/route";
 
 export const runtime = 'nodejs';
 
@@ -10,6 +12,15 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { id } = params;
 
     if (!ObjectId.isValid(id)) {
@@ -23,7 +34,10 @@ export async function GET(
     const db = client.db("opensesame");
     const collection = db.collection("learning_plans");
 
-    const plan = await collection.findOne({ _id: new ObjectId(id) });
+    const plan = await collection.findOne({ 
+      _id: new ObjectId(id),
+      userId: session.user.id 
+    });
 
     if (!plan) {
       return NextResponse.json(

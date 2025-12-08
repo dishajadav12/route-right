@@ -10,6 +10,15 @@ function inlineMd(s: string) {
     .replace(/\*(.+?)\*/g, "<em>$1</em>");
 }
 
+function cleanUrl(url: string): string {
+  // Decode URL-encoded characters like %20
+  try {
+    return decodeURIComponent(url);
+  } catch {
+    return url;
+  }
+}
+
 function Markdown({ md }: { md: string }) {
   const lines = md.trim().split(/\r?\n/);
   const elements: JSX.Element[] = [];
@@ -79,6 +88,11 @@ interface Week {
 }
 
 interface LearningPath {
+  overview?: string;
+  duration?: string;
+  timeCommitment?: string;
+  difficultyLevel?: string;
+  whatYoullBuild?: string;
   skills: string[];
   weeks: Week[];
   accessibility: string;
@@ -115,22 +129,35 @@ export default function DemoPage() {
       `Output language: ${language}.\n\n` +
       `TASK: Create a ${weeks}-week learning path. Return ONLY plain Markdown (NO code blocks, NO \`\`\`markdown tags).\n\n` +
       "Format EXACTLY like this:\n\n" +
+      "## Overview\n" +
+      "Write a compelling 2-3 sentence introduction about this learning journey. Explain what the learner will achieve and why this path is exciting.\n\n" +
+      `**Duration:** ${weeks} weeks\n` +
+      `**Time Commitment:** ${hours} hours/week\n` +
+      "**Difficulty Level:** [Beginner/Intermediate/Advanced based on the goal]\n" +
+      "**What You'll Build:** Brief description of the final project or outcome\n\n" +
       "## Top Skills\n" +
       "1. Skill Name: Brief description\n" +
       "2. Skill Name: Brief description\n" +
       "(Continue for 6 skills)\n\n" +
       "## Learning Path\n\n" +
       "**Week 1: Theme Title**\n" +
-      "- Learning Item: Description\n" +
-      "- Learning Item: Description\n" +
-      "- Learning Item: Description\n" +
+      "- Learning Item Title: Description [Reference Link](https://actual-working-url.com)\n" +
+      "- Learning Item Title: Description [Reference Link](https://actual-working-url.com)\n" +
+      "- Learning Item Title: Description [Reference Link](https://actual-working-url.com)\n" +
       "- Hands-on Task: Task description\n\n" +
       "**Week 2: Theme Title**\n" +
-      "- Learning Item: Description\n" +
-      "- Learning Item: Description\n" +
-      "- Learning Item: Description\n" +
+      "- Learning Item Title: Description [Reference Link](https://actual-working-url.com)\n" +
+      "- Learning Item Title: Description [Reference Link](https://actual-working-url.com)\n" +
+      "- Learning Item Title: Description [Reference Link](https://actual-working-url.com)\n" +
       "- Hands-on Task: Task description\n\n" +
       `(Continue for weeks 3-${weeks})\n\n` +
+      "CRITICAL REQUIREMENTS:\n" +
+      "- For EVERY learning item, include a specific reference link at the end in format: [Link Text](https://url.com)\n" +
+      "- Use official documentation, GitHub repos, YouTube tutorials, or reputable learning platforms\n" +
+      "- Ensure URLs are properly formatted with NO spaces (no %20 encoding)\n" +
+      "- Example good link: https://www.typescriptlang.org/docs/handbook/intro.html\n" +
+      "- Example bad link: https://example.com/some%20page (has %20)\n" +
+      "- Replace any spaces in URLs with hyphens or remove them entirely\n\n" +
       "## Learning Resources\n" +
       "Provide 8-10 high-quality learning resources with ACTUAL clickable links in this format:\n" +
       "- [Resource Title](https://actual-url.com): Brief description of what this resource covers\n\n" +
@@ -142,7 +169,7 @@ export default function DemoPage() {
       "- Scenario-based questions and rubric\n\n" +
       "## Localization\n" +
       `- Tips for ${language} localization\n\n` +
-      "Keep it concrete, action-oriented, and workplace-relevant. DO NOT wrap output in code blocks."
+      "Keep it concrete, action-oriented, and workplace-relevant. Make it engaging and motivating! DO NOT wrap output in code blocks."
     );
   }, [role, goal, hours, language, weeks]);
 
@@ -192,6 +219,11 @@ export default function DemoPage() {
               goal,
               hours,
               language,
+              overview: plan.overview || "",
+              duration: plan.duration || "",
+              timeCommitment: plan.timeCommitment || "",
+              difficultyLevel: plan.difficultyLevel || "",
+              whatYoullBuild: plan.whatYoullBuild || "",
               skills: plan.skills || [],
               weeks: plan.weeks,
               accessibility: plan.accessibility || "",
@@ -310,220 +342,109 @@ export default function DemoPage() {
 
         {/* Results Section - 2/3 width */}
         <div className="flex-1">
-      {parsedPath && parsedPath.weeks.length > 0 && (
-        <section className="w-full">
-          {/* Header with Progress */}
-          <div className="mb-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg">
-            <h3 className="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Your Learning Roadmap</h3>
-            <p className="text-gray-600 mb-4">{parsedPath.weeks.length}-week journey to mastery</p>
-            <div className="relative">
-              <div className="flex items-center justify-between mb-2">
-                {parsedPath.weeks.map((week, idx) => (
-                  <button
-                    key={week.week}
-                    onClick={() => setActiveStep(idx)}
-                    className={`z-10 transition-all ${
-                      idx === activeStep 
-                        ? 'w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 shadow-lg scale-110' 
-                        : idx < activeStep 
-                        ? 'w-10 h-10 bg-teal-500 shadow' 
-                        : 'w-10 h-10 bg-gray-300 shadow'
-                    } rounded-full flex items-center justify-center font-bold text-white hover:scale-110`}
-                  >
-                    {idx < activeStep ? '✓' : week.week}
-                  </button>
-                ))}
-              </div>
-              <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200 -z-0">
-                <div 
-                  className="h-full bg-gradient-to-r from-teal-500 to-indigo-500 transition-all duration-500"
-                  style={{ width: `${(activeStep / (parsedPath.weeks.length - 1)) * 100}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Visual Flowchart */}
-          <div className="space-y-6 mb-8">
-            {parsedPath.weeks.map((week, idx) => (
-              <div key={week.week} className="relative">
-                {/* Connector Line */}
-                {idx > 0 && (
-                  <div className="absolute left-8 -top-6 w-1 h-6 bg-gradient-to-b from-indigo-300 to-purple-300" />
-                )}
+          {savedPlanId && (
+            <section className="w-full">
+              <div className="bg-gradient-to-br from-green-50 via-teal-50 to-blue-50 rounded-2xl shadow-xl p-12 text-center ring-1 ring-green-200">
+                <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
                 
-                {/* Week Card */}
-                <div
-                  className={`relative bg-white rounded-2xl shadow-xl ring-1 transition-all cursor-pointer overflow-hidden ${
-                    activeStep === idx 
-                      ? 'ring-2 ring-indigo-500 shadow-2xl scale-[1.02]' 
-                      : 'ring-gray-200 hover:shadow-2xl hover:scale-[1.01]'
-                  }`}
-                  onClick={() => setActiveStep(idx)}
-                >
-                  {/* Gradient Side Bar */}
-                  <div className={`absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b ${
-                    idx % 3 === 0 ? 'from-indigo-500 to-purple-500' : 
-                    idx % 3 === 1 ? 'from-purple-500 to-pink-500' : 
-                    'from-teal-500 to-indigo-500'
-                  }`} />
-                  
-                  <div className="p-6 pl-8">
-                    {/* Week Header */}
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className={`flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br ${
-                        idx % 3 === 0 ? 'from-indigo-500 to-purple-500' : 
-                        idx % 3 === 1 ? 'from-purple-500 to-pink-500' : 
-                        'from-teal-500 to-indigo-500'
-                      } flex items-center justify-center shadow-lg`}>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-white">{week.week}</div>
-                          <div className="text-xs text-white/80">WEEK</div>
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-xl font-bold text-gray-900 mb-1">{week.theme}</h4>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <span>📚 {week.items.length} Learning Items</span>
-                          {week.task && <span>• 🎯 Hands-on Project</span>}
-                        </div>
-                      </div>
-                      <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        idx === activeStep ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {idx === activeStep ? 'Current' : idx < activeStep ? 'Completed' : 'Upcoming'}
-                      </div>
-                    </div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                  🎉 Your Learning Plan is Ready!
+                </h2>
+                <p className="text-lg text-gray-600 mb-8">
+                  We've created a personalized {parsedPath?.weeks.length}-week learning roadmap just for you
+                </p>
 
-                    {/* Learning Items */}
-                    <div className="grid md:grid-cols-2 gap-4 mb-4">
-                      {week.items.map((item, i) => {
-                        const linkMatch = item.match(/\[([^\]]+)\]\(([^\)]+)\)/);
-                        const hasLink = !!linkMatch;
-                        const itemText = hasLink ? item.replace(/\[([^\]]+)\]\(([^\)]+)\)/, '$1') : item;
-                        
-                        return (
-                          <div key={i} className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-sm ring-1 ring-gray-100 hover:ring-indigo-200 hover:shadow transition-all">
-                            <div className="flex items-start gap-3">
-                              <div className={`flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br ${
-                                idx % 3 === 0 ? 'from-indigo-100 to-purple-100' : 
-                                idx % 3 === 1 ? 'from-purple-100 to-pink-100' : 
-                                'from-teal-100 to-indigo-100'
-                              } flex items-center justify-center`}>
-                                <span className="text-sm font-bold text-indigo-600">{i + 1}</span>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: inlineMd(itemText) }} />
-                                {hasLink && (
-                                  <a 
-                                    href={linkMatch[2]} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 mt-2 text-xs text-indigo-600 hover:text-indigo-800 font-medium underline"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    🔗 Open Resource
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Hands-on Task */}
-                    {week.task && (
-                      <div className="bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 rounded-xl p-5 ring-1 ring-pink-200 shadow-sm">
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center shadow">
-                            <span className="text-xl">🎯</span>
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-xs font-bold text-pink-600 mb-1 uppercase tracking-wide">Hands-On Project</p>
-                            <p className="text-sm text-gray-800 font-medium leading-relaxed">{week.task}</p>
-                          </div>
-                        </div>
+                {parsedPath && (
+                  <div className="bg-white/70 rounded-xl p-6 mb-8 max-w-2xl mx-auto">
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <div className="text-2xl font-bold text-indigo-600">{parsedPath.weeks.length}</div>
+                        <div className="text-xs text-gray-600 uppercase tracking-wide">Weeks</div>
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Arrow to Next Week */}
-                {idx < parsedPath.weeks.length - 1 && (
-                  <div className="flex justify-center py-4">
-                    <div className="w-1 h-8 bg-gradient-to-b from-indigo-300 to-purple-300 relative">
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-purple-400" />
+                      <div>
+                        <div className="text-2xl font-bold text-purple-600">{parsedPath.weeks.reduce((sum, w) => sum + w.items.length, 0)}</div>
+                        <div className="text-xs text-gray-600 uppercase tracking-wide">Learning Items</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-pink-600">{parsedPath.skills?.length || 0}</div>
+                        <div className="text-xs text-gray-600 uppercase tracking-wide">Key Skills</div>
+                      </div>
                     </div>
                   </div>
                 )}
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <a
+                    href={`/your-plans/${savedPlanId}`}
+                    className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold text-lg hover:shadow-2xl transition-all inline-flex items-center gap-2"
+                  >
+                    <span>View Your Learning Plan</span>
+                    <span>→</span>
+                  </a>
+                  <button
+                    onClick={() => {
+                      setSavedPlanId(null);
+                      setParsedPath(null);
+                      setResult("");
+                    }}
+                    className="px-6 py-3 bg-white text-gray-700 rounded-xl font-medium border-2 border-gray-200 hover:border-gray-300 transition-colors"
+                  >
+                    Create Another Plan
+                  </button>
+                </div>
+
+                <p className="mt-6 text-sm text-gray-500">
+                  Your plan has been saved to your account and is ready to guide your learning journey
+                </p>
               </div>
-            ))}
-          </div>
-
-          {(parsedPath.resources || parsedPath.assessment) && (
-            <div className="space-y-4 gap-4">
-              {parsedPath.resources && (
-                <div className="bg-gradient-to-br from-orange-50 to-white rounded-lg shadow p-5 ring-1 ring-orange-100">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
-                      <span className="text-orange-600 font-bold text-sm">🔗</span>
-                    </div>
-                    <h5 className="font-semibold text-gray-900">Learning Resources</h5>
-                  </div>
-                  <div className="text-sm text-gray-600 leading-relaxed space-y-2">
-                    {parsedPath.resources.split('\n').filter(line => line.trim()).map((line, idx) => {
-                      const linkMatch = line.match(/\[([^\]]+)\]\(([^\)]+)\):?(.*)/);
-                      if (linkMatch) {
-                        return (
-                          <div key={idx} className="flex items-start gap-2">
-                            <span className="text-orange-500 mt-1">•</span>
-                            <div>
-                              <a href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 font-medium underline">{linkMatch[1]}</a>
-                              {linkMatch[3] && <span className="text-gray-600">:{linkMatch[3]}</span>}
-                            </div>
-                          </div>
-                        );
-                      }
-                      return line.trim() ? <div key={idx} className="text-gray-600">{line}</div> : null;
-                    })}
-                  </div>
-                </div>
-              )}
-              {parsedPath.assessment && (
-                <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg shadow p-5 ring-1 ring-blue-100">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span className="text-blue-600 font-bold text-sm">✓</span>
-                    </div>
-                    <h5 className="font-semibold text-gray-900">Assessment</h5>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">{parsedPath.assessment}</p>
-                </div>
-              )}
-           
-            </div>
+            </section>
           )}
-        </section>
-      )}
 
-      {result && !parsedPath && (
-        <section className="w-full">
-          <div className="bg-white/90 rounded-2xl shadow ring-1 ring-black/5 p-6">
-Your learning path...          </div>
-        </section>
-      )}
+          {loading && (
+            <section className="w-full">
+              <div className="bg-white/90 rounded-2xl shadow ring-1 ring-black/5 p-12 text-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mx-auto mb-6"></div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Creating Your Learning Plan...</h3>
+                <p className="text-gray-600">Our AI is analyzing your goals and crafting a personalized roadmap</p>
+              </div>
+            </section>
+          )}
 
-      {!result && !loading && !error && (
-        <section className="w-full">
-          <div className="bg-white/90 rounded-2xl shadow ring-1 ring-black/5 p-6">
-            <p className="text-sm text-gray-600">Your learning path will appear here after you click "Generate Plan".</p>
-          </div>
-        </section>
-      )}
+          {!savedPlanId && !loading && !error && (
+            <section className="w-full">
+              <div className="bg-white/90 rounded-2xl shadow ring-1 ring-black/5 p-12 text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-4xl">🚀</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Ready to Start Learning?</h3>
+                <p className="text-gray-600">Fill out the form and click "Generate Plan" to create your personalized learning roadmap</p>
+              </div>
+            </section>
+          )}
+
+          {error && (
+            <section className="w-full">
+              <div className="bg-red-50 rounded-2xl shadow ring-1 ring-red-200 p-8 text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-4xl">⚠️</span>
+                </div>
+                <h3 className="text-xl font-semibold text-red-900 mb-2">Oops! Something went wrong</h3>
+                <p className="text-red-600 mb-4">{error}</p>
+                <button
+                  onClick={onGenerate}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                >
+                  Try Again
+                </button>
+              </div>
+            </section>
+          )}
         </div>
       </div>
     </main>
   );
 }
-
