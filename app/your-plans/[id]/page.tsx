@@ -260,13 +260,23 @@ export default function PlanDetailPage() {
                       <>
                         <div className="grid md:grid-cols-2 gap-4 mb-4">
                           {week.items.map((item, i) => {
-                            const linkMatch = item.match(/\[([^\]]+)\]\(([^\)]+)\)/);
-                            const hasLink = !!linkMatch;
-                            const linkText = hasLink ? linkMatch[1] : '';
-                            const linkUrl = hasLink ? cleanUrl(linkMatch[2]) : '';
-                            const itemText = hasLink ? item.replace(/\[([^\]]+)\]\(([^\)]+)\)/, '').trim() : item;
+                            // Match both [text](url) and [url] formats
+                            let linkMatch = item.match(/\[([^\]]+)\]\(([^\)]+)\)/);
+                            let hasLink = !!linkMatch;
+                            let linkText = hasLink ? linkMatch![1] : '';
+                            let linkUrl = hasLink ? cleanUrl(linkMatch![2]) : '';
+                            let itemText = hasLink ? item.replace(/\[([^\]]+)\]\(([^\)]+)\)/, '').trim() : item;
                             
-                            return (
+                            // If no match, try matching [url] format at the end
+                            if (!hasLink) {
+                              const simpleLinkMatch = item.match(/^(.+?)\s*\[(https?:\/\/[^\]]+)\]\s*$/);
+                              if (simpleLinkMatch) {
+                                hasLink = true;
+                                itemText = simpleLinkMatch[1].trim();
+                                linkUrl = cleanUrl(simpleLinkMatch[2]);
+                                linkText = 'Read More';
+                              }
+                            }                            return (
                               <div key={i} className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-sm ring-1 ring-gray-100 hover:ring-indigo-200 hover:shadow transition-all">
                                 <div className="flex items-start gap-3">
                                   <div className={`flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br ${
@@ -283,7 +293,7 @@ export default function PlanDetailPage() {
                                         href={linkUrl} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg text-xs text-indigo-700 hover:text-indigo-900 font-medium transition-colors"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg text-xs text-indigo-700 hover:text-indigo-900 font-medium transition-colors cursor-pointer"
                                         onClick={(e) => e.stopPropagation()}
                                       >
                                         <span>📖</span>
