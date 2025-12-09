@@ -122,7 +122,7 @@ export default function DemoPage() {
   const prompt = useMemo(() => {
     return (
       "You are an instructional design assistant for a corporate learning marketplace.\n" +
-      "Company: OpenSesame (AI-powered catalog; skills-based curation; multilingual content).\n" +
+      "Project: RouteRight (AI-powered learning path generator with personalized curriculum).\n" +
       `Audience: ${role}.\n` +
       `Learner’s goal: ${goal}.\n` +
       `Available time: ~${hours} hours/week.\n` +
@@ -141,30 +141,44 @@ export default function DemoPage() {
       "(Continue for 6 skills)\n\n" +
       "## Learning Path\n\n" +
       "**Week 1: Theme Title**\n" +
-      "- Learning Item Title: Description [Reference Link](https://actual-working-url.com)\n" +
-      "- Learning Item Title: Description [Reference Link](https://actual-working-url.com)\n" +
-      "- Learning Item Title: Description [Reference Link](https://actual-working-url.com)\n" +
-      "- Hands-on Task: Task description\n\n" +
+      "- Learning Item Title: Write a comprehensive 3-5 sentence description that includes: (1) What this topic is and why it matters, (2) Key concepts and fundamental theory behind it, (3) Practical applications and how it's used, (4) Learning outcomes - what the learner will understand after studying this. Make it educational and informative. [Reference Link](https://actual-working-url.com)\n" +
+      "- Learning Item Title: Write a comprehensive 3-5 sentence description that includes: (1) What this topic is and why it matters, (2) Key concepts and fundamental theory behind it, (3) Practical applications and how it's used, (4) Learning outcomes - what the learner will understand after studying this. Make it educational and informative. [Reference Link](https://actual-working-url.com)\n" +
+      "- Learning Item Title: Write a comprehensive 3-5 sentence description that includes: (1) What this topic is and why it matters, (2) Key concepts and fundamental theory behind it, (3) Practical applications and how it's used, (4) Learning outcomes - what the learner will understand after studying this. Make it educational and informative. [Reference Link](https://actual-working-url.com)\n" +
+      "- Hands-on Task: Provide a detailed, actionable task description with clear steps and expected outcomes\n\n" +
       "**Week 2: Theme Title**\n" +
-      "- Learning Item Title: Description [Reference Link](https://actual-working-url.com)\n" +
-      "- Learning Item Title: Description [Reference Link](https://actual-working-url.com)\n" +
-      "- Learning Item Title: Description [Reference Link](https://actual-working-url.com)\n" +
-      "- Hands-on Task: Task description\n\n" +
+      "- Learning Item Title: Write a comprehensive 3-5 sentence description that includes: (1) What this topic is and why it matters, (2) Key concepts and fundamental theory behind it, (3) Practical applications and how it's used, (4) Learning outcomes - what the learner will understand after studying this. Make it educational and informative. [Reference Link](https://actual-working-url.com)\n" +
+      "- Learning Item Title: Write a comprehensive 3-5 sentence description that includes: (1) What this topic is and why it matters, (2) Key concepts and fundamental theory behind it, (3) Practical applications and how it's used, (4) Learning outcomes - what the learner will understand after studying this. Make it educational and informative. [Reference Link](https://actual-working-url.com)\n" +
+      "- Learning Item Title: Write a comprehensive 3-5 sentence description that includes: (1) What this topic is and why it matters, (2) Key concepts and fundamental theory behind it, (3) Practical applications and how it's used, (4) Learning outcomes - what the learner will understand after studying this. Make it educational and informative. [Reference Link](https://actual-working-url.com)\n" +
+      "- Hands-on Task: Provide a detailed, actionable task description with clear steps and expected outcomes\n\n" +
       `(Continue for weeks 3-${weeks})\n\n` +
-      "CRITICAL REQUIREMENTS:\n" +
+      "CRITICAL REQUIREMENTS FOR DESCRIPTIONS:\n" +
+      "- Each learning item description MUST be 3-5 sentences long and include:\n" +
+      "  1. Introduction: What the topic is and its significance in the field\n" +
+      "  2. Theory & Concepts: Explain the fundamental principles, concepts, or theory behind it\n" +
+      "  3. Practical Application: How it's used in real-world scenarios or projects\n" +
+      "  4. Learning Outcomes: What specific knowledge or skills the learner will gain\n" +
+      "- Make descriptions educational, informative, and engaging\n" +
+      "- Include technical terminology with brief explanations\n" +
+      "- Connect concepts to previous knowledge where relevant\n\n" +
+      "CRITICAL REQUIREMENTS FOR LINKS:\n" +
       "- For EVERY learning item, include a specific reference link at the end in format: [Link Text](https://url.com)\n" +
+      "- Use ONLY current, up-to-date resources from 2023-2025 (no outdated content)\n" +
+      "- Prioritize official documentation, recent tutorials, and modern best practices\n" +
       "- Use official documentation, GitHub repos, YouTube tutorials, or reputable learning platforms\n" +
       "- Ensure URLs are properly formatted with NO spaces (no %20 encoding)\n" +
       "- Example good link: https://www.typescriptlang.org/docs/handbook/intro.html\n" +
       "- Example bad link: https://example.com/some%20page (has %20)\n" +
-      "- Replace any spaces in URLs with hyphens or remove them entirely\n\n" +
+      "- Replace any spaces in URLs with hyphens or remove them entirely\n" +
+      "- Avoid deprecated resources, old framework versions, or outdated tutorials\n" +
+      "- Focus on the latest trends, tools, and industry standards\n\n" +
       "## Learning Resources\n" +
-      "Provide 8-10 high-quality learning resources with ACTUAL clickable links in this format:\n" +
+      "Provide 8-10 high-quality, CURRENT learning resources with ACTUAL clickable links in this format:\n" +
       "- [Resource Title](https://actual-url.com): Brief description of what this resource covers\n\n" +
-      "IMPORTANT: Include real, specific URLs based on the learning goal. Examples:\n" +
-      "- For programming: Official documentation, GitHub repos, YouTube tutorials\n" +
-      "- For design: Dribbble, Behance, design blogs\n" +
-      "- For business: Harvard Business Review, Medium articles, course platforms\n\n" +
+      "IMPORTANT: Include real, specific, RECENT URLs (2023-2025) based on the learning goal. Examples:\n" +
+      "- For programming: Latest official documentation, active GitHub repos, recent YouTube tutorials\n" +
+      "- For design: Current Dribbble trends, Behance 2024-2025, modern design blogs\n" +
+      "- For business: Recent HBR articles, current Medium posts, updated course platforms\n" +
+      "- Verify all resources reflect current best practices and latest industry standards\n\n" +
       "## Assessment\n" +
       "- Scenario-based questions and rubric\n\n" +
       "## Localization\n" +
@@ -235,7 +249,6 @@ export default function DemoPage() {
           if (saveRes.ok) {
             const saveData = await saveRes.json();
             const planId = saveData.planId;
-            setSavedPlanId(planId);
             
             // Fetch the saved plan from MongoDB
             const fetchRes = await fetch(`/api/plans/${planId}`);
@@ -246,6 +259,10 @@ export default function DemoPage() {
               // Fallback to the generated plan if fetch fails
               setParsedPath(plan);
             }
+            
+            // Set loading to false BEFORE setting savedPlanId to prevent overlapping cards
+            setLoading(false);
+            setSavedPlanId(planId);
           } else {
             // If save fails, still display the generated plan
             setParsedPath(plan);
@@ -258,7 +275,6 @@ export default function DemoPage() {
       }
     } catch (err: any) {
       setError(String(err?.message || err));
-    } finally {
       setLoading(false);
     }
   };

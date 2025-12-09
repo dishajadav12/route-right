@@ -24,7 +24,7 @@ export const authOptions: AuthOptions = {
         }
 
         const client = await clientPromise;
-        const db = client.db("opensesame");
+        const db = client.db("route_right");
         const users = db.collection("users");
 
         const user = await users.findOne({ email: credentials.email });
@@ -63,7 +63,7 @@ export const authOptions: AuthOptions = {
       if (account && account.provider !== "credentials") {
         // Get user from database to ensure we have the MongoDB _id
         const client = await clientPromise;
-        const db = client.db("opensesame");
+        const db = client.db("route_right");
         const users = db.collection("users");
         
         if (token.email) {

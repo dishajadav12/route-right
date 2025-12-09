@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     const client = await clientPromise;
-    const db = client.db("opensesame");
+    const db = client.db("route_right");
     const users = db.collection("users");
 
     // Check if user already exists

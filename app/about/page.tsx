@@ -237,7 +237,7 @@ export default function AboutPage() {
             </p>
             <p className="text-gray-600">
               Created by <span className="font-semibold">Disha Jadav</span>, a graduate student in Software Engineering 
-              at San José State University, as part of the OpenSesame internship project. This platform demonstrates 
+              at San José State University. RouteRight is an AI-powered platform that demonstrates 
               the potential of AI to make quality learning experiences accessible to everyone, everywhere, for anything.
             </p>
           </div>

@@ -31,7 +31,7 @@ export async function GET(
     }
 
     const client = await clientPromise;
-    const db = client.db("opensesame");
+    const db = client.db("route_right");
     const collection = db.collection("learning_plans");
 
     const plan = await collection.findOne({ 

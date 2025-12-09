@@ -35,9 +35,25 @@ interface LearningPath {
 
 function cleanUrl(url: string): string {
   try {
-    return decodeURIComponent(url);
+    // First decode URL-encoded characters
+    let decoded = decodeURIComponent(url);
+    // Remove any %20 or encoded spaces and replace with actual spaces, then trim
+    decoded = decoded.replace(/%20/g, ' ').trim();
+    // Remove leading spaces and slashes that might appear after decoding
+    decoded = decoded.replace(/^[\s/]+/, '');
+    // Ensure proper protocol
+    if (!decoded.startsWith('http://') && !decoded.startsWith('https://')) {
+      decoded = 'https://' + decoded;
+    }
+    return decoded;
   } catch {
-    return url;
+    // Fallback: clean up the URL manually
+    let cleaned = url.replace(/%20/g, ' ').trim();
+    cleaned = cleaned.replace(/^[\s/]+/, '');
+    if (!cleaned.startsWith('http://') && !cleaned.startsWith('https://')) {
+      cleaned = 'https://' + cleaned;
+    }
+    return cleaned;
   }
 }
 
@@ -56,7 +72,7 @@ export default function PlanDetailPage() {
   const [plan, setPlan] = useState<LearningPath | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(-1); // Start with Introduction
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -112,276 +128,216 @@ export default function PlanDetailPage() {
   }
 
   return (
-    <main className="px-4 py-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Breadcrumb */}
-        <div className="mb-6">
-          <Link href="/your-plans" className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+    <main className="min-h-screen bg-gray-50">
+      {/* Top Header */}
+      <div className="bg-white border-b sticky top-0 z-10">
+        <div className="px-6 py-4">
+          <Link href="/your-plans" className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1 mb-2">
             <span>←</span>
             <span>Back to Your Plans</span>
           </Link>
+          <h1 className="text-2xl font-bold text-gray-900">{plan.role}</h1>
+          <p className="text-sm text-gray-600">{plan.goal}</p>
         </div>
+      </div>
 
-        {/* Overview Section */}
-        {(plan.overview || plan.duration) && (
-          <div className="mb-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 shadow-lg ring-1 ring-indigo-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
-                <span className="text-2xl">🎯</span>
+      {/* Main Content Area with Sidebar */}
+      <div className="flex">
+        {/* Left Sidebar Navigation */}
+        <div className="w-80 flex-shrink-0 bg-white border-r min-h-screen sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto overflow-x-hidden">
+          <div className="p-4">
+            {/* Introduction Section */}
+            <button
+              onClick={() => setActiveStep(-1)}
+              className={`w-full text-left p-4 rounded-lg mb-2 transition-all ${
+                activeStep === -1
+                  ? 'bg-indigo-50 border-l-4 border-indigo-600'
+                  : 'hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-10 h-10 flex-shrink-0 rounded-lg flex items-center justify-center ${
+                  activeStep === -1 ? 'bg-indigo-600' : 'bg-gray-200'
+                }`}>
+                  <span className="text-xl">{activeStep === -1 ? '📚' : '📖'}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className={`font-semibold truncate ${activeStep === -1 ? 'text-indigo-900' : 'text-gray-900'}`}>
+                    Introduction
+                  </div>
+                  <div className="text-xs text-gray-500 truncate">Course Overview</div>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{plan.role}</h1>
-                <p className="text-sm text-gray-600">{plan.goal}</p>
-              </div>
-            </div>
-            
-            {plan.overview && (
-              <p className="text-lg text-gray-700 mb-6 leading-relaxed">{plan.overview}</p>
-            )}
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {plan.duration && (
-                <div className="bg-white/70 rounded-xl p-4 shadow-sm">
-                  <div className="text-xs font-semibold text-indigo-600 mb-1 uppercase tracking-wide">Duration</div>
-                  <div className="text-lg font-bold text-gray-900">{plan.duration}</div>
-                </div>
-              )}
-              {plan.timeCommitment && (
-                <div className="bg-white/70 rounded-xl p-4 shadow-sm">
-                  <div className="text-xs font-semibold text-purple-600 mb-1 uppercase tracking-wide">Time/Week</div>
-                  <div className="text-lg font-bold text-gray-900">{plan.timeCommitment}</div>
-                </div>
-              )}
-              {plan.difficultyLevel && (
-                <div className="bg-white/70 rounded-xl p-4 shadow-sm">
-                  <div className="text-xs font-semibold text-pink-600 mb-1 uppercase tracking-wide">Level</div>
-                  <div className="text-lg font-bold text-gray-900">{plan.difficultyLevel}</div>
-                </div>
-              )}
-              {plan.whatYoullBuild && (
-                <div className="bg-white/70 rounded-xl p-4 shadow-sm col-span-2 md:col-span-1">
-                  <div className="text-xs font-semibold text-teal-600 mb-1 uppercase tracking-wide">Final Project</div>
-                  <div className="text-sm font-bold text-gray-900 line-clamp-2">{plan.whatYoullBuild}</div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+            </button>
 
-        {/* Header with Progress */}
-        <div className="mb-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg">
-          <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Week by Week Breakdown</h2>
-          <p className="text-gray-600 mb-4">{plan.weeks.length}-week structured learning path</p>
-          <div className="relative">
-            <div className="flex items-center justify-between mb-2">
-              {plan.weeks.map((week, idx) => (
-                <button
-                  key={week.week}
-                  onClick={() => setActiveStep(idx)}
-                  className={`z-10 transition-all ${ idx === activeStep 
-                      ? 'w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 shadow-lg scale-110' 
-                      : idx < activeStep 
-                      ? 'w-10 h-10 bg-teal-500 shadow' 
-                      : 'w-10 h-10 bg-gray-300 shadow'
-                  } rounded-full flex items-center justify-center font-bold text-white hover:scale-110`}
-                >
-                  {idx < activeStep ? '✓' : week.week}
-                </button>
-              ))}
-            </div>
-            <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200 -z-0">
-              <div 
-                className="h-full bg-gradient-to-r from-teal-500 to-indigo-500 transition-all duration-500"
-                style={{ width: `${(activeStep / (plan.weeks.length - 1)) * 100}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Week Cards */}
-        <div className="space-y-6 mb-8">
-          {plan.weeks.map((week, idx) => {
-            const isActive = activeStep === idx;
-            
-            return (
-              <div key={week.week} className="relative">
-                {idx > 0 && (
-                  <div className="absolute left-8 -top-6 w-1 h-6 bg-gradient-to-b from-indigo-300 to-purple-300" />
-                )}
+            {/* Week Navigation */}
+            <div className="space-y-2">
+              {plan.weeks.map((week, idx) => {
+                const isActive = activeStep === idx;
                 
-                <div
-                  className={`relative bg-white rounded-2xl shadow-xl ring-1 transition-all cursor-pointer overflow-hidden ${
-                    isActive 
-                      ? 'ring-2 ring-indigo-500 shadow-2xl' 
-                      : 'ring-gray-200 hover:shadow-lg'
-                  }`}
-                  onClick={() => setActiveStep(idx)}
-                >
-                  <div className={`absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b ${
-                    idx % 3 === 0 ? 'from-indigo-500 to-purple-500' : 
-                    idx % 3 === 1 ? 'from-purple-500 to-pink-500' : 
-                    'from-teal-500 to-indigo-500'
-                  }`} />
-                  
-                  <div className="p-6 pl-8">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className={`flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br ${
-                        idx % 3 === 0 ? 'from-indigo-500 to-purple-500' : 
-                        idx % 3 === 1 ? 'from-purple-500 to-pink-500' : 
-                        'from-teal-500 to-indigo-500'
-                      } flex items-center justify-center shadow-lg`}>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-white">{week.week}</div>
-                          <div className="text-xs text-white/80">WEEK</div>
+                return (
+                  <button
+                    key={week.week}
+                    onClick={() => setActiveStep(idx)}
+                    className={`w-full text-left p-4 rounded-lg transition-all ${
+                      isActive
+                        ? 'bg-indigo-50 border-l-4 border-indigo-600'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-10 h-10 flex-shrink-0 rounded-lg flex items-center justify-center ${
+                        isActive ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'
+                      }`}>
+                        <span className="font-bold">{week.week}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-semibold text-sm truncate ${isActive ? 'text-indigo-900' : 'text-gray-900'}`}>
+                          Week {week.week}
                         </div>
+                        <div className="text-xs text-gray-500 truncate">{week.theme}</div>
+                      </div>
+                      {isActive && (
+                        <svg className="w-4 h-4 flex-shrink-0 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Content Area */}
+        <div className="flex-1 p-8 overflow-y-auto">
+          {/* Introduction Content */}
+          {activeStep === -1 && (
+            <div className="max-w-4xl">
+              <h2 className="text-3xl font-bold text-gray-900 mb-6">Course Overview</h2>
+              
+              {plan.overview && (
+                <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
+                  <p className="text-lg text-gray-700 leading-relaxed">{plan.overview}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                {plan.duration && (
+                  <div className="bg-white rounded-xl p-6 shadow-sm">
+                    <div className="text-sm font-semibold text-indigo-600 mb-2">Duration</div>
+                    <div className="text-2xl font-bold text-gray-900">{plan.duration}</div>
+                  </div>
+                )}
+                {plan.timeCommitment && (
+                  <div className="bg-white rounded-xl p-6 shadow-sm">
+                    <div className="text-sm font-semibold text-purple-600 mb-2">Time Commitment</div>
+                    <div className="text-2xl font-bold text-gray-900">{plan.timeCommitment}</div>
+                  </div>
+                )}
+                {plan.difficultyLevel && (
+                  <div className="bg-white rounded-xl p-6 shadow-sm">
+                    <div className="text-sm font-semibold text-pink-600 mb-2">Difficulty Level</div>
+                    <div className="text-2xl font-bold text-gray-900">{plan.difficultyLevel}</div>
+                  </div>
+                )}
+                {plan.whatYoullBuild && (
+                  <div className="bg-white rounded-xl p-6 shadow-sm md:col-span-2">
+                    <div className="text-sm font-semibold text-teal-600 mb-2">What You'll Build</div>
+                    <div className="text-lg font-bold text-gray-900">{plan.whatYoullBuild}</div>
+                  </div>
+                )}
+              </div>
+
+              {plan.skills && plan.skills.length > 0 && (
+                <div className="bg-white rounded-xl p-6 shadow-sm">
+                  <h3 className="font-semibold text-gray-900 mb-4">Skills You'll Gain</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {plan.skills.map((skill, idx) => (
+                      <span key={idx} className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Week Content */}
+          {activeStep >= 0 && plan.weeks[activeStep] && (
+            <div className="max-w-4xl">
+              <div className="mb-6">
+                <div className="text-sm font-semibold text-indigo-600 mb-2">Week {plan.weeks[activeStep].week}</div>
+                <h2 className="text-3xl font-bold text-gray-900">{plan.weeks[activeStep].theme}</h2>
+              </div>
+
+              <div className="space-y-6">
+                {plan.weeks[activeStep].items.map((item, i) => {
+                  // Match both [text](url) and [url] formats
+                  let linkMatch = item.match(/\[([^\]]+)\]\(([^\)]+)\)/);
+                  let hasLink = !!linkMatch;
+                  let linkText = hasLink ? linkMatch![1] : '';
+                  let linkUrl = hasLink ? cleanUrl(linkMatch![2]) : '';
+                  let itemText = hasLink ? item.replace(/\[([^\]]+)\]\(([^\)]+)\)/, '').trim() : item;
+                  
+                  // If no match, try matching [url] format at the end
+                  if (!hasLink) {
+                    const simpleLinkMatch = item.match(/^(.+?)\s*\[(https?:\/\/[^\]]+)\]\s*$/);
+                    if (simpleLinkMatch) {
+                      hasLink = true;
+                      itemText = simpleLinkMatch[1].trim();
+                      linkUrl = cleanUrl(simpleLinkMatch[2]);
+                      linkText = 'Read More';
+                    }
+                  }
+
+                  return (
+                    <div key={i} className="bg-white rounded-xl p-6 shadow-sm">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                          <span className="text-lg font-bold text-indigo-600">{i + 1}</span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-base text-gray-800 leading-relaxed mb-3" dangerouslySetInnerHTML={{ __html: inlineMd(itemText) }} />
+                          {hasLink && (
+                            <a 
+                              href={linkUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                              <span>📖</span>
+                              <span>{linkText}</span>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {plan.weeks[activeStep].task && (
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 shadow-sm border-2 border-purple-200">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                        <span className="text-2xl">🎯</span>
                       </div>
                       <div className="flex-1">
-                        <h4 className="text-xl font-bold text-gray-900 mb-1">{week.theme}</h4>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <span>📚 {week.items.length} Learning Items</span>
-                          {week.task && <span>• 🎯 Hands-on Project</span>}
-                        </div>
+                        <h3 className="text-sm font-bold text-purple-900 mb-2 uppercase tracking-wide">Hands-On Project</h3>
+                        <p className="text-base text-gray-800 leading-relaxed">{plan.weeks[activeStep].task}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {isActive ? 'Current' : idx < activeStep ? 'Completed' : 'Upcoming'}
-                        </div>
-                        <div className={`transition-transform ${isActive ? 'rotate-180' : ''}`}>
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-
-                    {isActive && (
-                      <>
-                        <div className="grid md:grid-cols-2 gap-4 mb-4">
-                          {week.items.map((item, i) => {
-                            // Match both [text](url) and [url] formats
-                            let linkMatch = item.match(/\[([^\]]+)\]\(([^\)]+)\)/);
-                            let hasLink = !!linkMatch;
-                            let linkText = hasLink ? linkMatch![1] : '';
-                            let linkUrl = hasLink ? cleanUrl(linkMatch![2]) : '';
-                            let itemText = hasLink ? item.replace(/\[([^\]]+)\]\(([^\)]+)\)/, '').trim() : item;
-                            
-                            // If no match, try matching [url] format at the end
-                            if (!hasLink) {
-                              const simpleLinkMatch = item.match(/^(.+?)\s*\[(https?:\/\/[^\]]+)\]\s*$/);
-                              if (simpleLinkMatch) {
-                                hasLink = true;
-                                itemText = simpleLinkMatch[1].trim();
-                                linkUrl = cleanUrl(simpleLinkMatch[2]);
-                                linkText = 'Read More';
-                              }
-                            }                            return (
-                              <div key={i} className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-sm ring-1 ring-gray-100 hover:ring-indigo-200 hover:shadow transition-all">
-                                <div className="flex items-start gap-3">
-                                  <div className={`flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br ${
-                                    idx % 3 === 0 ? 'from-indigo-100 to-purple-100' : 
-                                    idx % 3 === 1 ? 'from-purple-100 to-pink-100' : 
-                                    'from-teal-100 to-indigo-100'
-                                  } flex items-center justify-center`}>
-                                    <span className="text-sm font-bold text-indigo-600">{i + 1}</span>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm text-gray-800 leading-relaxed font-medium mb-2" dangerouslySetInnerHTML={{ __html: inlineMd(itemText) }} />
-                                    {hasLink && (
-                                      <a 
-                                        href={linkUrl} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg text-xs text-indigo-700 hover:text-indigo-900 font-medium transition-colors cursor-pointer"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <span>📖</span>
-                                        <span>{linkText}</span>
-                                        <span className="text-indigo-400">→</span>
-                                      </a>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {week.task && (
-                          <div className="bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 rounded-xl p-5 ring-1 ring-pink-200 shadow-sm">
-                            <div className="flex items-start gap-3">
-                              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center shadow">
-                                <span className="text-xl">🎯</span>
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-xs font-bold text-pink-600 mb-1 uppercase tracking-wide">Hands-On Project</p>
-                                <p className="text-sm text-gray-800 font-medium leading-relaxed">{week.task}</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {idx < plan.weeks.length - 1 && (
-                  <div className="flex justify-center py-4">
-                    <div className="w-1 h-8 bg-gradient-to-b from-indigo-300 to-purple-300 relative">
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-purple-400" />
                     </div>
                   </div>
                 )}
               </div>
-            );
-          })}
+            </div>
+          )}
         </div>
-
-        {/* Additional Sections */}
-        {(plan.resources || plan.assessment) && (
-          <div className="space-y-4">
-            {plan.resources && (
-              <div className="bg-gradient-to-br from-orange-50 to-white rounded-lg shadow p-5 ring-1 ring-orange-100">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
-                    <span className="text-orange-600 font-bold text-sm">🔗</span>
-                  </div>
-                  <h5 className="font-semibold text-gray-900">Learning Resources</h5>
-                </div>
-                <div className="text-sm text-gray-600 leading-relaxed space-y-2">
-                  {plan.resources.split('\n').filter(line => line.trim()).map((line, idx) => {
-                    const linkMatch = line.match(/\[([^\]]+)\]\(([^\)]+)\):?(.*)/);
-                    if (linkMatch) {
-                      const cleanedUrl = cleanUrl(linkMatch[2]);
-                      return (
-                        <div key={idx} className="flex items-start gap-2">
-                          <span className="text-orange-500 mt-1">•</span>
-                          <div>
-                            <a href={cleanedUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 font-medium underline">{linkMatch[1]}</a>
-                            {linkMatch[3] && <span className="text-gray-600">:{linkMatch[3]}</span>}
-                          </div>
-                        </div>
-                      );
-                    }
-                    return line.trim() ? <div key={idx} className="text-gray-600">{line}</div> : null;
-                  })}
-                </div>
-              </div>
-            )}
-            {plan.assessment && (
-              <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg shadow p-5 ring-1 ring-blue-100">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                    <span className="text-blue-600 font-bold text-sm">✓</span>
-                  </div>
-                  <h5 className="font-semibold text-gray-900">Assessment</h5>
-                </div>
-                <p className="text-sm text-gray-600 leading-relaxed">{plan.assessment}</p>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </main>
   );

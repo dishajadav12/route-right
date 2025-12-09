@@ -102,9 +102,6 @@ export default function YourPlansPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">No learning plans yet</h3>
             <p className="text-gray-600 mb-6">Create your first AI-powered learning roadmap to get started</p>
-            <Link href="/generate-plan" className="inline-block px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg font-medium hover:shadow-lg transition">
-              Generate Your First Plan
-            </Link>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
