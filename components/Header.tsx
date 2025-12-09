@@ -15,7 +15,6 @@ export default function Header() {
         </div>
         <nav className="flex items-center gap-2">
           <Link href="/" className="px-4 py-2 rounded-lg text-sm font-medium transition text-gray-700 hover:bg-white hover:text-indigo-600">Home</Link>
-          <Link href="/about" className="px-4 py-2 rounded-lg text-sm font-medium transition text-gray-700 hover:bg-white hover:text-indigo-600">About</Link>
           <Link href="/generate-plan" className="px-4 py-2 rounded-lg text-sm font-medium transition text-gray-700 hover:bg-white hover:text-indigo-600">Generate Plan</Link>
           
           {status === "authenticated" && (
