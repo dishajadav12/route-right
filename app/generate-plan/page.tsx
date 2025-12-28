@@ -201,7 +201,7 @@ export default function DemoPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           prompt, 
-          model: "gemini-2.0-flash", 
+          model: "gemini-1.5-flash", 
           generationConfig: { temperature: 0.6, topK: 32, topP: 0.95, maxOutputTokens: 2048 } 
         })
       });

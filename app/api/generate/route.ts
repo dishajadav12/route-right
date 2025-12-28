@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = 'nodejs';
 
-const allowedModels = new Set(["gemini-2.0-flash", "gemini-2.5-pro", "gemini-flash-latest", "gemini-pro-latest"]);
+const allowedModels = new Set(["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro", "gemini-pro"]);
 const rateStore: Record<string, { count: number; windowStart: number }> = {};
 
 interface Week {
@@ -325,7 +325,7 @@ export async function POST(req: NextRequest) {
       urlModelParam = null;
     }
     
-    const requestedModel = (bodyObj?.model as string) || urlModelParam || "gemini-2.0-flash";
+    const requestedModel = (bodyObj?.model as string) || urlModelParam || "gemini-1.5-flash";
     if (!allowedModels.has(requestedModel)) {
       return NextResponse.json(
         { code: "UNSUPPORTED_MODEL", message: `Model ${requestedModel} is not supported.` }, 
@@ -343,7 +343,7 @@ export async function POST(req: NextRequest) {
     };
 
     // Make API call to Google Gemini
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${requestedModel}:generateContent?key=${key}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${requestedModel}:generateContent?key=${key}`;
     
     const requestBody = {
       contents: [
