@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = 'nodejs';
 
-const allowedModels = new Set(["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro", "gemini-pro"]);
+const allowedModels = new Set(["gemini-1.5-flash-latest", "gemini-1.5-pro-latest", "gemini-2.0-flash-exp", "gemini-1.5-flash", "gemini-1.5-pro"]);
 const rateStore: Record<string, { count: number; windowStart: number }> = {};
 
 interface Week {
@@ -325,7 +325,7 @@ export async function POST(req: NextRequest) {
       urlModelParam = null;
     }
     
-    const requestedModel = (bodyObj?.model as string) || urlModelParam || "gemini-1.5-flash";
+    const requestedModel = (bodyObj?.model as string) || urlModelParam || "gemini-1.5-flash-latest";
     if (!allowedModels.has(requestedModel)) {
       return NextResponse.json(
         { code: "UNSUPPORTED_MODEL", message: `Model ${requestedModel} is not supported.` }, 
@@ -343,7 +343,9 @@ export async function POST(req: NextRequest) {
     };
 
     // Make API call to Google Gemini
-    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${requestedModel}:generateContent?key=${key}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${requestedModel}:generateContent?key=${key}`;
+    
+    console.log('Making request to Gemini API:', { model: requestedModel, promptLength: prompt.length });
     
     const requestBody = {
       contents: [
@@ -368,6 +370,7 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('Gemini API error:', { status: response.status, errorText });
       let errorMessage = "Failed to generate content";
       try {
         const errorJson = JSON.parse(errorText);
@@ -383,6 +386,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json();
+    console.log('Gemini API success:', { hasCandidates: !!data.candidates, candidateCount: data.candidates?.length });
     
     // Extract text from response
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";

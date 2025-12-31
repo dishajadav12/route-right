@@ -196,15 +196,22 @@ export default function DemoPage() {
     setLastPrompt(prompt);
     setLoading(true);
     try {
+      // Add timeout to prevent infinite loading
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           prompt, 
-          model: "gemini-1.5-flash", 
+          model: "gemini-1.5-flash-latest", 
           generationConfig: { temperature: 0.6, topK: 32, topP: 0.95, maxOutputTokens: 2048 } 
-        })
+        }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       if (!res.ok) {
         const data = await res.json();
@@ -266,15 +273,24 @@ export default function DemoPage() {
           } else {
             // If save fails, still display the generated plan
             setParsedPath(plan);
+            setLoading(false);
           }
         } catch (saveErr) {
           console.error("Failed to save/fetch plan:", saveErr);
           // Fallback to displaying the generated plan
           setParsedPath(plan);
+          setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
     } catch (err: any) {
-      setError(String(err?.message || err));
+      if (err.name === 'AbortError') {
+        setError("Request timed out. Please try again.");
+      } else {
+        setError(String(err?.message || err));
+      }
+    } finally {
       setLoading(false);
     }
   };
